@@ -30,10 +30,10 @@ ready(function() {
 		readFile(e.target);
 	});
 
-	document.querySelector("#test-button").addEventListener('click', function() {
-		console.log(source_array);
-		console.log(source_array.length)
-	});
+	// document.querySelector("#test-button").addEventListener('click', function() {
+	// 	console.log(source_array);
+	// 	console.log(source_array.length)
+	// });
 
 	document.querySelector("#calculate-button").addEventListener('click', function() {
 		calc_array = copyArray(source_array);
