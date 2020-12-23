@@ -1,7 +1,0 @@
-[		{"name":"Egon"},
-		{"name":"Peter"},
-		{"name":"Horst"},
-		{"name":"Hugo"},
-		{"name":"Beate"},
-		{"name":"Sabrina"}
-]

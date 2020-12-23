@@ -21,12 +21,20 @@ ready(function() {
 	var source_array = [];
 	var obj_csv = {size:0, dataFile:[]};
 	var super_res_array = [];
+	var team_size = 0;
+
+	// Manual description in teams div
+	document.querySelector('#teams').innerHTML = '<p class="m-5 text-center">Please first import a csv file with just one column containing the potential team members. After that you will see the imported result under "Source". You can than enter a number of team-members a team can consist of and hit the calculate button. The export can after that be exported!</p>';
+	 	
 	
+	// eventhandler
 	document.querySelector('#clear-button').addEventListener('click',function() {
 		clearTeams();
 	});
 
 	document.querySelector('#uploadfile').addEventListener('change',function(e) {
+		source_array = [];
+		super_res_array = [];
 		readFile(e.target);
 	});
 
@@ -37,16 +45,26 @@ ready(function() {
 
 	document.querySelector("#calculate-button").addEventListener('click', function() {
 		calc_array = copyArray(source_array);
-		calculate(calc_array, document.querySelector('#team-size').value);
+		team_size = document.querySelector('#team-size').value;
+		calculate(calc_array, team_size);
 	});
 
 	document.querySelector('#team-size').addEventListener('keypress',function(e) {
 		if(e.key === 'Enter'){
 			calc_array = copyArray(source_array);
-			calculate(calc_array, document.querySelector('#team-size').value);
+			team_size = document.querySelector('#team-size').value;
+			calculate(calc_array, team_size);
 		}
 	});
- 
+
+	document.querySelector("#export-button").addEventListener('click', function() {
+		// Maybe add here a stopper function if the state of the app is not ready you cannot proceed!
+		const date = new Date()
+		const date_string = (date.getFullYear() + '_' + date.getDate() + '_' + (date.getMonth()+1) + "_" + date.getHours() + (( date.getMinutes() < 10 ? "0" : "" ) + date.getMinutes()) + (( date.getSeconds() < 10 ? "0" : "" ) + date.getSeconds()))
+		export_csv(super_res_array, ';', 'team_export_' + date_string, team_size);
+	});
+
+ 	// file import functions
 	function readFile(input) {
 		clearTeams();
 		clearSource();
@@ -62,6 +80,9 @@ ready(function() {
 			        parseData(obj_csv.dataFile)          
 		 	}
 	 	}
+	 	document.querySelector('#uploadfile').value = '';
+	 	document.querySelector('#teams').innerHTML = '<h3 class="m-5 text-center bg-secondary">Your file was imported to Source container, please now hit the button calculate after you inserted a team-size.</h3>';
+	 	
 	}
  
 	function parseData(data){
@@ -89,7 +110,8 @@ ready(function() {
 			source_div.insertAdjacentHTML('beforeend', '<span>' + source_array[i] + ', </span>');
 		}	
 	}
-		
+
+	// calculate teams functions	
 	function calculate(arr, num){
 		clearTeams();
 		
@@ -107,16 +129,18 @@ ready(function() {
 		for(let i = 1; arr.length > 0; i++) {
 			const res_array = chooseRandom(arr, num)
 			teams_div.insertAdjacentHTML('beforeend', '<div class="card text-success mx-1 mb-2"><div class="card-body"><h5 class="card-title">Team ' + i + '</h5><p id="team' + i + '" class="card-text"></p></div></div>')
-			// console.log('result_array_' + i + ': ' + res_array);
-			// super_res_array[i-1] = push(res_array); -> keep on working here for the csv export!!!!!
 			
+			super_res_array.push(res_array);
+
 			for(let j = res_array.length; j > 0; j--){
 				const team_div = document.getElementById('team' + i);
 				team_div.insertAdjacentHTML('beforeend',res_array[j-1] + '<br>');
 				// console.log('result_array_position' + j + ': ' + res_array[j-1]);
 			}
 		}
-		console.log('super_res: ' + super_res_array)
+		// console.log(super_res_array)
+		// console.log('super_res: ' + super_res_array[0][1])
+
 	}
 
 	function chooseRandom(arr, num){
@@ -129,8 +153,8 @@ ready(function() {
 	      if(arr.length === 0){
 	      	return res;
 	      }
+
 	      res.push(arr[random]);
-	      // arr = arr.filter((name,index) => index != random); //-> fix that shit!!!
 	      arr.splice(random,1);
 	      // console.log('reduced_array: ' + arr);
 	      // console.log(arr.filter((name, index) => index === random))
@@ -138,6 +162,34 @@ ready(function() {
 	    return res;
 	}
 
+	// export csv function
+	function export_csv(arrayData, delimiter, fileName, team_size) {
+        // Build header
+        let csv = 'Team;'
+        for (i = 1; i <= team_size; i++){
+        	csv += 'Member_' + i + delimiter;
+        }
+        csv += "\n";
+
+        var team_nr = 1;
+        arrayData.forEach( team => {
+        	csv += 'Team '+team_nr+delimiter;
+        	team_nr++;
+        	csv += team.join(delimiter) + "\n";
+        	// console.log(team)
+        });
+
+        let csvData = new Blob([csv], { type: 'text/csv' });  
+        let csvUrl = URL.createObjectURL(csvData);
+
+        let hiddenElement = document.createElement('a');
+        hiddenElement.href = csvUrl;
+        hiddenElement.target = '_blank';
+        hiddenElement.download = fileName + '.csv';
+        hiddenElement.click();
+    }
+
+	//utility functions
 	function copyArray(arr){
 		const copy_array = [];
 		for(let i = arr.length; i > 0; i--){
